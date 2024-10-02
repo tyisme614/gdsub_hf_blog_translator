@@ -1,53 +1,18 @@
 const fs = require('node:fs');
-const OpenAI = require('openai');
+const Openai_worker = require('openai');
 const markdown = require('markdown');
 const {NodeHtmlMarkdown} = require("node-html-markdown");
+const axios = require('axios');
 // let node_html_md = require('node-html-markdown').NodeHtmlMarkdown;
 let chatgpt, node_html_md;
 
 let config = null;
-
+let clients = new Map();
 /**
  *
  * main process
  *
  */
-// _initialize_config();
-
-// const original_content = fs.readFileSync(__dirname + '/bloom-inference-optimization.md', 'utf8');
-// let raw = original_content.split('\n');
-// let blocks = [];
-// let block = {
-//     text : '',
-//     need_translate : true
-// };
-// for (let i = 0; i < raw.length; i++) {
-//     // console.log( i + '  :  ' + raw[i]);
-//     // if(raw[i].includes('```')){
-//     //     block.need_translate = false;
-//     // }
-//     block.text += (raw[i] + '\n');
-//     if(raw[i] === '') {
-//         block.text = markdown.parse(block.text);
-//         blocks.push(block);
-//         block = {
-//             text : '',
-//             need_translate : true
-//         };
-//     }
-// }
-
-// let file_content = fs.readFileSync(__dirname + '/output_initial.md', 'utf8');
-// let res = node_html_md.translate(file_content);
-// fs.writeFileSync(__dirname + '/output_converted.md', res);
-
-// for(let i = 0; i < blocks.length; i++) {
-//     let block = blocks[i];
-//     let md = markdown.parse(block.text);
-//     console.log( 'Block No.' + i + '\n' + JSON.stringify(md));
-// }
-// _test_openai(blocks);
-// _test_openai();
 
 
 /**
@@ -64,19 +29,78 @@ function initialize_config(){
         //load api key from local config file
         const data = fs.readFileSync(__dirname + '/config.json', 'utf8');
         config = JSON.parse(data.toString());
-        chatgpt = new OpenAI({apiKey: config.openai_key});
+        chatgpt = new Openai_worker({apiKey: config.openai_key});
         node_html_md = new NodeHtmlMarkdown({}, undefined, undefined);
     } catch (err) {
         console.error(err);
     }
 }
 
-async function _test_openai(raw){
+function register_client(socket, id){
+    clients.set(id, socket);
 
+}
+
+/**
+ * download blog file from target url and save it under ./backend_service/public/source/
+ *
+ * @param url of blog file
+ */
+function download_source_file(url){
+    let raw = url.split('/');
+    let filename = raw[raw.length - 1];
+    let ws = clients.get(filename);
+    axios.get(url)
+        .then(function (response) {
+            // handle success
+            // console.log(response);
+            let data = response.data;
+            let file_path = __dirname + '/backend_service/public/source/' + filename;
+            fs.writeFileSync(file_path, data);
+            ws.emit('msg', 'markdown file downloaded');
+
+            let raw = data.split('\n');
+            let blocks = [];
+            let block = {
+                text : '',
+                need_translate : true
+            };
+            for (let i = 0; i < raw.length; i++) {
+
+                block.text += (raw[i] + '\n');
+                if(raw[i] === '') {
+                    block.text = markdown.parse(block.text);
+                    blocks.push(block);
+                    block = {
+                        text : '',
+                        need_translate : true
+                    };
+                }
+            }
+            process_blocks(blocks, ws);
+        })
+        .catch(function (error) {
+            // handle error
+            console.log(error);
+        })
+        .finally(function () {
+            // always executed
+        });
+}
+//test
+// download_source_file('https://raw.githubusercontent.com/huggingface-cn/hf-blog-translation/refs/heads/main/2023-in-llms.md');
+
+
+async function process_blocks(blocks, socket){
+    //block object
+    // block = {
+//             text : '',
+//             need_translate : true
+//         };
     let progressbar = '';
     // const original_content = fs.readFileSync(__dirname + '/bloom-inference-optimization.md', 'utf8');
-    for(let i=0; i<raw.length; i++){
-        let block = raw[i];
+    for(let i=0; i<blocks.length; i++){
+        let block = blocks[i];
         if(block.need_translate && block.text !== ''){
             let content = block.text;
             console.log( 'Block No.' + i + '\n' + content);
@@ -173,11 +197,25 @@ async function _test_openai(raw){
             fs.appendFileSync(__dirname + '/output_refined.md', md_refined_translation + '\n');
         }
         progressbar += '#';
-        console.log('total progress: ' + (i * 100.0/raw.length).toFixed(2) + '% ' + progressbar);
-    }//end of loop
+        console.log('total progress: ' + (i * 100.0/blocks.length).toFixed(2) + '% ' + progressbar);
+        let msg = {
+            progress: (i * 100.0/blocks.length).toFixed(2),
+            block_index: i,
+            total_blocks: blocks.length
+        }
 
+        socket.emit('msg', JSON.stringify(msg));
+    }//end of loop
+    let msg = {
+        progress: 100.0,
+        block_index: blocks.length - 1 ,
+        total_blocks: blocks.length
+    }
+
+    socket.emit('msg', JSON.stringify(msg));
 }
 
+module.exports = {initialize_config, register_client, download_source_file};
 
 
 /**
