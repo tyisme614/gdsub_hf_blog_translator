@@ -17,7 +17,7 @@ export class EventsGateway {
   handleEvent( @ConnectedSocket() client: any, data: string): string {
     let json = JSON.parse(data);
     if(json.type === 'register'){
-      openai_worker.
+      openai_worker.register_client(client, json.file);
     }
     return data;
   }

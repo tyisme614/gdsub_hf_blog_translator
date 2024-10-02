@@ -29,6 +29,7 @@ function initialize_config(){
         //load api key from local config file
         const data = fs.readFileSync(__dirname + '/config.json', 'utf8');
         config = JSON.parse(data.toString());
+        console.log('api_key-->' + config.openai_key);
         chatgpt = new Openai_worker({apiKey: config.openai_key});
         node_html_md = new NodeHtmlMarkdown({}, undefined, undefined);
     } catch (err) {
