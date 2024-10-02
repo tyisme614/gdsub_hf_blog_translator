@@ -23,8 +23,14 @@
     "@nestjs/common": "^10.0.0",
     "@nestjs/core": "^10.0.0",
     "@nestjs/platform-express": "^10.0.0",
+    "@nestjs/platform-socket.io": "^10.4.4",
+    "@nestjs/platform-ws": "^10.4.4",
+    "@nestjs/websockets": "^10.4.4",
+    "hbs": "^4.2.0",
     "reflect-metadata": "^0.2.0",
-    "rxjs": "^7.8.1"
+    "rxjs": "^7.8.1",
+    "websocket": "^1.0.35",
+    "ws": "^8.18.0"
   },
   "devDependencies": {
     "@nestjs/cli": "^10.0.0",
