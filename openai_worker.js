@@ -4,10 +4,13 @@ const markdown = require('markdown');
 const {NodeHtmlMarkdown} = require("node-html-markdown");
 const axios = require('axios');
 // let node_html_md = require('node-html-markdown').NodeHtmlMarkdown;
+
+const BASE_PATH_OUTPUT = __dirname + '/backend_service/public/output/';
 let chatgpt, node_html_md;
 
 let config = null;
 let clients = new Map();
+let ws_client = null;
 /**
  *
  * main process
@@ -24,20 +27,31 @@ let clients = new Map();
  */
 
 
-function initialize_config(){
+function initialize_config(_wsclient){
     try {
         //load api key from local config file
         const data = fs.readFileSync(__dirname + '/config.json', 'utf8');
         config = JSON.parse(data.toString());
-        console.log('api_key-->' + config.openai_key);
+
         chatgpt = new Openai_worker({apiKey: config.openai_key});
         node_html_md = new NodeHtmlMarkdown({}, undefined, undefined);
+
+        ws_client = _wsclient;
     } catch (err) {
         console.error(err);
     }
 }
 
+
+/**
+ *
+ *
+ * register websocket client in local map
+ * @param socket
+ * @param id  target file name
+ */
 function register_client(socket, id){
+
     clients.set(id, socket);
 
 }
@@ -50,7 +64,7 @@ function register_client(socket, id){
 function download_source_file(url){
     let raw = url.split('/');
     let filename = raw[raw.length - 1];
-    let ws = clients.get(filename);
+
     axios.get(url)
         .then(function (response) {
             // handle success
@@ -58,7 +72,11 @@ function download_source_file(url){
             let data = response.data;
             let file_path = __dirname + '/backend_service/public/source/' + filename;
             fs.writeFileSync(file_path, data);
-            ws.emit('msg', 'markdown file downloaded');
+            let m = {
+                type: 'signal',
+                data: 'downloaded'
+            }
+            ws_client.sendMessage(filename, JSON.stringify(m));
 
             let raw = data.split('\n');
             let blocks = [];
@@ -78,7 +96,8 @@ function download_source_file(url){
                     };
                 }
             }
-            process_blocks(blocks, ws);
+
+            process_blocks(blocks, filename);
         })
         .catch(function (error) {
             // handle error
@@ -92,11 +111,11 @@ function download_source_file(url){
 // download_source_file('https://raw.githubusercontent.com/huggingface-cn/hf-blog-translation/refs/heads/main/2023-in-llms.md');
 
 
-async function process_blocks(blocks, socket){
-    //block object
-    // block = {
-//             text : '',
-//             need_translate : true
+async function process_blocks(blocks, filename){
+//block object
+//       block = {
+//              text : '',
+//              need_translate : true
 //         };
     let progressbar = '';
     // const original_content = fs.readFileSync(__dirname + '/bloom-inference-optimization.md', 'utf8');
@@ -174,28 +193,46 @@ async function process_blocks(blocks, socket){
             output = output.substring(index_start, index_end + 1)
             try{
                 let json_output = JSON.parse(output);
-                fs.appendFileSync(__dirname + '/output_initial.html', json_output.step1_initial_translation + '\n');
-                fs.appendFileSync(__dirname + '/output_refined.html', json_output.step3_refined_translation + '\n');
+                fs.appendFileSync(BASE_PATH_OUTPUT + 'output_initial_'+ filename +'.html', json_output.step1_initial_translation + '\n');
+                fs.appendFileSync(BASE_PATH_OUTPUT + 'output_refined_'+ filename +'.html', json_output.step3_refined_translation + '\n');
                 let md_initial_translation = node_html_md.translate(json_output.step1_initial_translation);
-                fs.appendFileSync(__dirname + '/output_initial.md', md_initial_translation + '\n');
+                fs.appendFileSync(BASE_PATH_OUTPUT + '/output_initial_'+ filename, md_initial_translation + '\n');
                 let md_refined_translation = node_html_md.translate(json_output.step3_refined_translation);
-                fs.appendFileSync(__dirname + '/output_refined.md', md_refined_translation + '\n');
+                fs.appendFileSync(BASE_PATH_OUTPUT + '/output_refined_'+ filename, md_refined_translation + '\n');
+                let m = {
+                    type: 'translate',
+                    initial_translation: md_initial_translation,
+                    refined_translation: md_refined_translation
+                }
+                ws_client.sendMessage(filename, JSON.stringify(m));
             }catch(e){
-                fs.appendFileSync(__dirname + '/output_initial.html', content + '\n');
-                fs.appendFileSync(__dirname + '/output_refined.html', content + '\n');
+                fs.appendFileSync(BASE_PATH_OUTPUT + '/output_initial_'+ filename +'.html', content + '\n');
+                fs.appendFileSync(BASE_PATH_OUTPUT + '/output_refined_'+ filename +'.html', content + '\n');
                 let md_initial_translation = node_html_md.translate(content);
-                fs.appendFileSync(__dirname + '/output_initial.md', md_initial_translation + '\n');
+                fs.appendFileSync(BASE_PATH_OUTPUT + '/output_initial_'+ filename, md_initial_translation + '\n');
                 let md_refined_translation = node_html_md.translate(content);
-                fs.appendFileSync(__dirname + '/output_refined.md', md_refined_translation + '\n');
+                fs.appendFileSync(BASE_PATH_OUTPUT + '/output_refined_'+ filename, md_refined_translation + '\n');
+                let m = {
+                    type: 'translate',
+                    initial_translation: md_initial_translation,
+                    refined_translation: md_refined_translation
+                }
+                ws_client.sendMessage(filename, JSON.stringify(m));
             }
 
         }else{
-            fs.appendFileSync(__dirname + '/output_initial.html', block.text + '\n');
-            fs.appendFileSync(__dirname + '/output_refined.html', block.text + '\n');
+            fs.appendFileSync(BASE_PATH_OUTPUT + '/output_initial_'+ filename +'.html', block.text + '\n');
+            fs.appendFileSync(BASE_PATH_OUTPUT + '/output_refined_'+ filename +'.html', block.text + '\n');
             let md_initial_translation = node_html_md.translate(block.text);
-            fs.appendFileSync(__dirname + '/output_initial.md', md_initial_translation + '\n');
+            fs.appendFileSync(BASE_PATH_OUTPUT + '/output_initial_'+ filename, md_initial_translation + '\n');
             let md_refined_translation = node_html_md.translate(block.text);
-            fs.appendFileSync(__dirname + '/output_refined.md', md_refined_translation + '\n');
+            fs.appendFileSync(BASE_PATH_OUTPUT + '/output_refined_'+ filename, md_refined_translation + '\n');
+            let m = {
+                type: 'translate',
+                initial_translation: md_initial_translation,
+                refined_translation: md_refined_translation
+            }
+            ws_client.sendMessage(filename, JSON.stringify(m));
         }
         progressbar += '#';
         console.log('total progress: ' + (i * 100.0/blocks.length).toFixed(2) + '% ' + progressbar);
@@ -205,7 +242,17 @@ async function process_blocks(blocks, socket){
             total_blocks: blocks.length
         }
 
-        socket.emit('msg', JSON.stringify(msg));
+        if(i === blocks.length -1){
+            progressbar += '#';
+            console.log('total progress: 100.0%  '  + progressbar);
+
+        }
+
+        let m = {
+            type: 'progress',
+            data:(i * 100.0/blocks.length).toFixed(2)
+        }
+        ws_client.sendMessage(filename, JSON.stringify(m));
     }//end of loop
     let msg = {
         progress: 100.0,
@@ -213,7 +260,7 @@ async function process_blocks(blocks, socket){
         total_blocks: blocks.length
     }
 
-    socket.emit('msg', JSON.stringify(msg));
+    // socket.emit('msg', JSON.stringify(msg));
 }
 
 module.exports = {initialize_config, register_client, download_source_file};

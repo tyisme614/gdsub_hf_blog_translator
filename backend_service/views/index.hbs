@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8" />
+    <script src="https://cdn.jsdelivr.net/npm/axios@1.6.7/dist/axios.min.js"></script>
+    <title>App</title>
+</head>
+<body>
+<form>
+    <label for="target">Blog file url:</label>
+    <input type="text" id="target" name="target"><br><br>
+</form>
+<button id="sendButton" type="button">Let's do it!</button>
+</body>
+<script type="module">
+    import { io } from "https://cdn.socket.io/4.7.5/socket.io.esm.min.js";
+
+    let socket = new io("ws://localhost:3001");
+    socket.on("connect", () => {
+       console.log('ws connected');
+       // socket.send('client is connected');
+        // socket.emit('events', 'client is connected');
+    });
+
+    socket.on("message", (data) => {
+        console.log('received:' + data);
+    });
+
+    document.getElementById('sendButton').addEventListener('click',
+            () => {
+                const messageInput = document.getElementById('target');
+                const target = messageInput.value;
+                let raw = target.split('/');
+                let filename = raw[raw.length - 1];
+                let msg = {
+                    type: 'register',
+                    id: filename
+                }
+                // const message = '2023-in-llms.md';
+                socket.send(JSON.stringify(msg));
+
+                axios.post('/commitTask', {
+                    url: target
+                })
+                        .then(function (response) {
+                            console.log(response);
+                        })
+                        .catch(function (error) {
+                            console.log(error);
+                        });
+            });
+
+</script>
+</html>
