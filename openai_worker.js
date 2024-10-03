@@ -200,7 +200,7 @@ async function process_blocks(blocks, filename){
                 let md_refined_translation = node_html_md.translate(json_output.step3_refined_translation);
                 fs.appendFileSync(BASE_PATH_OUTPUT + '/output_refined_'+ filename, md_refined_translation + '\n');
                 let m = {
-                    type: 'translate',
+                    type: 'translation',
                     initial_translation: md_initial_translation,
                     refined_translation: md_refined_translation
                 }
@@ -213,7 +213,7 @@ async function process_blocks(blocks, filename){
                 let md_refined_translation = node_html_md.translate(content);
                 fs.appendFileSync(BASE_PATH_OUTPUT + '/output_refined_'+ filename, md_refined_translation + '\n');
                 let m = {
-                    type: 'translate',
+                    type: 'translation',
                     initial_translation: md_initial_translation,
                     refined_translation: md_refined_translation
                 }
@@ -228,7 +228,7 @@ async function process_blocks(blocks, filename){
             let md_refined_translation = node_html_md.translate(block.text);
             fs.appendFileSync(BASE_PATH_OUTPUT + '/output_refined_'+ filename, md_refined_translation + '\n');
             let m = {
-                type: 'translate',
+                type: 'translation',
                 initial_translation: md_initial_translation,
                 refined_translation: md_refined_translation
             }

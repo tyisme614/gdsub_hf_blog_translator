@@ -2,15 +2,51 @@
 <html>
 <head>
     <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=0.5, user-scalable=no" />
+    <link rel="stylesheet" href="assets/css/main.css" />
     <script src="https://cdn.jsdelivr.net/npm/axios@1.6.7/dist/axios.min.js"></script>
-    <title>App</title>
+    <script src="assets/js/jquery.min.js"></script>
+    <script src="assets/js/jquery.dropotron.min.js"></script>
+    <script src="assets/js/browser.min.js"></script>
+    <script src="assets/js/breakpoints.min.js"></script>
+    <script src="assets/js/util.js"></script>
+    <script src="assets/js/main.js"></script>
+    <title>GDSub Blog Translator</title>
 </head>
-<body>
-<form>
-    <label for="target">Blog file url:</label>
-    <input type="text" id="target" name="target"><br><br>
-</form>
-<button id="sendButton" type="button">Let's do it!</button>
+<body class="is-preload">
+<div id="page-wrapper">
+    <div class="aln-center row gtr-50">
+        <section class="off-1-narrow col-6 col-12-narrower">
+        <form>
+
+            <div class="col-6 col-12-mobilep">
+                <label for="target">Blog file url:</label>
+                <input type="text" id="target" name="target"><br><br>
+            </div>
+            <div class="col-12">
+                <ul class="actions">
+                    <li><input type="button" class="button alt" id="sendButton" value="Let's do it!" /></li>
+                </ul>
+            </div>
+        </form>
+
+        <form>
+            <div class="col-12">
+<!--                <div class="col-6-normal">-->
+<!--                    <h3>Initial Translation</h3>-->
+<!--                    <textarea name="message" id="initial" placeholder="Initial Translation" cols="6" rows="5"></textarea>-->
+<!--                </div>-->
+            <progress id="progress" max="100" value="0"></progress>
+            <div class="col-6-normal">
+                <h3>Refined Translation</h3>
+                <textarea name="message" id="refined" placeholder="Refined Translation" cols="6" rows="10"></textarea>
+            </div>
+            </div>
+        </form>
+
+        </section>
+    </div>
+</div>
 </body>
 <script type="module">
     import { io } from "https://cdn.socket.io/4.7.5/socket.io.esm.min.js";
@@ -24,6 +60,19 @@
 
     socket.on("message", (data) => {
         console.log('received:' + data);
+        let json = JSON.parse(data);
+        if(json.type === 'translation'){
+            // let initialArea = document.getElementById('initial');
+            // initialArea.value += json.initial_translation + '\n';
+            // initialArea.scrollTop = initialArea.scrollHeight;
+            let refinedArea = document.getElementById('refined');
+            refinedArea.value += json.refined_translation + '\n';
+            refinedArea.scrollTop = refinedArea.scrollHeight;
+        }else if(json.type === 'progress'){
+            let progress = json.data;
+            let progressbar = document.getElementById('progress');
+            progressbar.value = progress;
+        }
     });
 
     document.getElementById('sendButton').addEventListener('click',
