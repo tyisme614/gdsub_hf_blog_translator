@@ -50,7 +50,7 @@
 </body>
 <script type="module">
     import { io } from "https://cdn.socket.io/4.7.5/socket.io.esm.min.js";
-    let ws_service = "ws://"this.location.host + ":3001";
+    let ws_service = "ws://" + location.host + ":3001";
     let socket = new io(ws_service);
     socket.on("connect", () => {
        console.log('ws connected');
