@@ -51,7 +51,7 @@
 <script src="https://cdn.socket.io/4.4.0/socket.io.min.js" integrity="sha384-1fOn6VtTq3PWwfsOrk45LnYcGosJwzMHv+Xh/Jx5303FVOXzEnw0EpLv30mtjmlj" crossorigin="anonymous"></script>
 <script type="module">
     // import { io } from "https://cdn.socket.io/4.7.5/socket.io.esm.min.js";
-    let ws_service = "ws://" + location.host + ":3001";
+    let ws_service = "ws://" + location.hostname + ":3001";
     let socket = new io(ws_service);
     socket.on("connect", () => {
        console.log('ws connected');
