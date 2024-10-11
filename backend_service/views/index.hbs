@@ -26,6 +26,8 @@
             <div class="col-12">
                 <ul class="actions">
                     <li><input type="button" class="button alt" id="sendButton" value="Let's do it!" /></li>
+                    <li><input type="button" class="button alt" id="download_original" value="Download(Original)" /></li>
+                    <li><input type="button" class="button alt" id="download_refined" value="Download(Refined)" /></li>
                 </ul>
             </div>
         </form>
@@ -97,6 +99,28 @@
                         })
                         .catch(function (error) {
                             console.log(error);
+                        });
+            });
+
+    document.getElementById('download_original').addEventListener('click',
+            () => {
+                const messageInput = document.getElementById('target');
+                const target = messageInput.value;
+                let raw = target.split('/');
+                let filename = raw[raw.length - 1];
+
+                axios.get('/file/download')
+                        .then(function (response) {
+                            // handle success
+                            console.log(response);
+                        })
+                        .catch(function (error) {
+                            // handle error
+                            console.log(error);
+                            alert('encountered error:' + error.message);
+                        })
+                        .finally(function () {
+                            // always executed
                         });
             });
 

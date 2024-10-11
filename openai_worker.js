@@ -242,16 +242,18 @@ async function process_blocks(blocks, filename){
             total_blocks: blocks.length
         }
 
-        if(i === blocks.length -1){
-            progressbar += '#';
-            console.log('total progress: 100.0%  '  + progressbar);
-
-        }
-
         let m = {
             type: 'progress',
             data:(i * 100.0/blocks.length).toFixed(2)
         }
+
+        if(i === blocks.length -1){
+            progressbar += '#';
+            console.log('total progress: 100.0%  '  + progressbar);
+            m.data = 100.0;
+        }
+
+
         ws_client.sendMessage(filename, JSON.stringify(m));
     }//end of loop
     let msg = {
