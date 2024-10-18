@@ -108,20 +108,22 @@
                 const target = messageInput.value;
                 let raw = target.split('/');
                 let filename = raw[raw.length - 1];
-
-                axios.get('/file/download')
-                        .then(function (response) {
-                            // handle success
-                            console.log(response);
-                        })
-                        .catch(function (error) {
-                            // handle error
-                            console.log(error);
-                            alert('encountered error:' + error.message);
-                        })
-                        .finally(function () {
-                            // always executed
-                        });
+                let url = location.origin + '/file/download?target=' + filename;
+                let url_encoded = encodeURI(url);
+                window.open(url_encoded);
+                // axios.get('/file/download')
+                //         .then(function (response) {
+                //             // handle success
+                //             console.log(response);
+                //         })
+                //         .catch(function (error) {
+                //             // handle error
+                //             console.log(error);
+                //             alert('encountered error:' + error.message);
+                //         })
+                //         .finally(function () {
+                //             // always executed
+                //         });
             });
 
 </script>
