@@ -10,7 +10,7 @@ export class FileController {
     console.log(target);
     console.log(type);
     console.log(process.cwd());
-    const file = createReadStream(join(process.cwd() + '/backend_service/public/output', 'output_' + type + '_' + target));
+    const file = createReadStream(join(process.cwd() + '/public/output', 'output_' + type + '_' + target));
     res.set( 'Content-Type','text/plain');
     res.set('Content-Disposition', 'attachment; filename="'+ target +'"');
 
