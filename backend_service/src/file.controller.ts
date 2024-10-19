@@ -7,18 +7,17 @@ import type { Response } from 'express';
 export class FileController {
   @Get('download')
   getFile(@Query('target') target:string, @Query('type') type:string, @Res({ passthrough: true }) res: Response): StreamableFile {
-    let res_data;
+    let res_data = null;
     let target_path = join(process.cwd() + '/public/output', 'output_' + type + '_' + target);
-    if (existsSync('/etc/passwd')) {
-      const file = createReadStream(target_path);
+    if (existsSync(target_path)) {
+
       res.set( 'Content-Type','text/plain');
-      res.set('Content-Disposition', 'attachment; filename="'+ target +'"');
-      res_data = new StreamableFile(file);
+      res.set('Content-Disposition', 'attachment; filename="'+ type + '_' + target +'"');
+      res_data = new StreamableFile(createReadStream(target_path));
     }else{
 
-      const file = createReadStream(join(process.cwd() + '/views', '404.html'));
       res.set( 'Content-Type','text/html');
-      res_data = new StreamableFile(file);
+      res_data = new StreamableFile(createReadStream(join(process.cwd() + '/views', '404.html')));
     }
 
 
