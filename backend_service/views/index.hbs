@@ -110,6 +110,7 @@
                 let filename = raw[raw.length - 1];
                 let url = location.origin + '/file/download?target=' + filename;
                 let url_encoded = encodeURI(url);
+
                 window.open(url_encoded);
                 // axios.get('/file/download')
                 //         .then(function (response) {
