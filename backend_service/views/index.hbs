@@ -108,7 +108,7 @@
                 const target = messageInput.value;
                 let raw = target.split('/');
                 let filename = raw[raw.length - 1];
-                let url = location.origin + '/file/download?target=' + filename;
+                let url = location.origin + '/file/download?target=' + filename + '&type=original';
                 let url_encoded = encodeURI(url);
 
                 window.open(url_encoded);
