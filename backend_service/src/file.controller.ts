@@ -9,7 +9,8 @@ export class FileController {
   getFile(@Query('target') target:string, @Query('type') type:string, @Res({ passthrough: true }) res: Response): StreamableFile {
     console.log(target);
     console.log(type);
-    const file = createReadStream(join(process.cwd() + '/../public/output', 'output_' + type + '_' + target));
+    console.log(process.cwd());
+    const file = createReadStream(join(process.cwd() + '/backend_service/public/output', 'output_' + type + '_' + target));
     res.set( 'Content-Type','text/plain');
     res.set('Content-Disposition', 'attachment; filename="'+ target +'"');
 
