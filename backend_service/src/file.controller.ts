@@ -9,6 +9,7 @@ export class FileController {
   @Header('Content-Type', 'application/json')
   @Header('Content-Disposition', 'attachment; filename="package.json"')
   getFile(@Req() req: Request, @Res({ passthrough: true }) res: Response): StreamableFile {
+    console.log(req.params['target']);
     const file = createReadStream(join(process.cwd(), 'package.json'));
     res.set( 'Content-Type','text/plain');
     res.set('Content-Disposition', 'attachment; filename="package.json"');
