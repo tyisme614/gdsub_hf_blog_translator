@@ -1,5 +1,5 @@
 import {Controller, Get, Header, Req, Res, Query, StreamableFile} from '@nestjs/common';
-import { createReadStream } from 'fs';
+import { createReadStream, existsSync } from 'fs';
 import { join } from 'path';
 import type { Response } from 'express';
 
@@ -7,13 +7,22 @@ import type { Response } from 'express';
 export class FileController {
   @Get('download')
   getFile(@Query('target') target:string, @Query('type') type:string, @Res({ passthrough: true }) res: Response): StreamableFile {
-    console.log(target);
-    console.log(type);
-    console.log(process.cwd());
-    const file = createReadStream(join(process.cwd() + '/public/output', 'output_' + type + '_' + target));
-    res.set( 'Content-Type','text/plain');
-    res.set('Content-Disposition', 'attachment; filename="'+ target +'"');
+    let res_data;
+    let target_path = join(process.cwd() + '/public/output', 'output_' + type + '_' + target);
+    if (existsSync('/etc/passwd')) {
+      const file = createReadStream(target_path);
+      res.set( 'Content-Type','text/plain');
+      res.set('Content-Disposition', 'attachment; filename="'+ target +'"');
+      res_data = new StreamableFile(file);
+    }else{
 
-    return new StreamableFile(file);
+      const file = createReadStream(join(process.cwd() + '/views', '404.html'));
+      res.set( 'Content-Type','text/html');
+      res_data = new StreamableFile(file);
+    }
+
+
+
+    return res_data;
   }
 }

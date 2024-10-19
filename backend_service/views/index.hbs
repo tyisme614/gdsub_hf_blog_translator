@@ -26,7 +26,7 @@
             <div class="col-12">
                 <ul class="actions">
                     <li><input type="button" class="button alt" id="sendButton" value="Let's do it!" /></li>
-                    <li><input type="button" class="button alt" id="download_original" value="Download(Original)" /></li>
+                    <li><input type="button" class="button alt" id="download_initial" value="Download(Initial)" /></li>
                     <li><input type="button" class="button alt" id="download_refined" value="Download(Refined)" /></li>
                 </ul>
             </div>
@@ -102,13 +102,13 @@
                         });
             });
 
-    document.getElementById('download_original').addEventListener('click',
+    document.getElementById('download_initial').addEventListener('click',
             () => {
                 const messageInput = document.getElementById('target');
                 const target = messageInput.value;
                 let raw = target.split('/');
                 let filename = raw[raw.length - 1];
-                let url = location.origin + '/file/download?target=' + filename + '&type=original';
+                let url = location.origin + '/file/download?target=' + filename + '&type=initial';
                 let url_encoded = encodeURI(url);
 
                 window.open(url_encoded);
@@ -125,6 +125,19 @@
                 //         .finally(function () {
                 //             // always executed
                 //         });
+            });
+
+    document.getElementById('download_refined').addEventListener('click',
+            () => {
+                const messageInput = document.getElementById('target');
+                const target = messageInput.value;
+                let raw = target.split('/');
+                let filename = raw[raw.length - 1];
+                let url = location.origin + '/file/download?target=' + filename + '&type=initial';
+                let url_encoded = encodeURI(url);
+
+                window.open(url_encoded);
+
             });
 
 </script>
